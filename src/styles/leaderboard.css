@@ -1,0 +1,397 @@
+/* ==========================================
+   LEADERBOARD STYLES
+   ========================================== */
+
+.leaderboard {
+  min-height: 100vh;
+  background: #f8f9fa;
+  padding: 2rem;
+}
+
+.leaderboard-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.leaderboard-header h1 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.leaderboard-header p {
+  color: #666;
+  margin: 0;
+}
+
+/* Filters */
+.leaderboard-filters {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.leaderboard-filters .filter-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.leaderboard-filters label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.leaderboard-filters select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.btn-reset {
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border: 2px solid #667eea;
+  color: #667eea;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-reset:hover {
+  background: #667eea;
+  color: white;
+}
+
+/* Podium Section */
+.podium-section {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  padding: 2rem;
+}
+
+.podium-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.3s;
+  min-width: 200px;
+}
+
+.podium-card:hover {
+  transform: translateY(-8px);
+}
+
+.podium-card.first {
+  transform: scale(1.1);
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: white;
+}
+
+.podium-card.second {
+  background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%);
+  color: white;
+}
+
+.podium-card.third {
+  background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
+  color: white;
+}
+
+.podium-medal {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.podium-rank {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.podium-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.podium-xp {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Leaderboard Table */
+.leaderboard-table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboard-table thead {
+  background: #667eea;
+  color: white;
+}
+
+.leaderboard-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.leaderboard-table tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+  transition: background 0.2s;
+}
+
+.leaderboard-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.leaderboard-table tbody tr.current-user {
+  background: #e7f3ff;
+  font-weight: 600;
+}
+
+.leaderboard-table tbody tr.current-user:hover {
+  background: #d0e7ff;
+}
+
+.leaderboard-table td {
+  padding: 1rem;
+}
+
+.rank-cell {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.rank-medal {
+  font-size: 1.5rem;
+}
+
+.rank-number {
+  color: #666;
+}
+
+.name-cell {
+  font-weight: 600;
+  color: #333;
+}
+
+.you-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: #667eea;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.xp-cell {
+  font-weight: 700;
+}
+
+.xp-value {
+  color: #FFA500;
+  font-size: 1.1rem;
+}
+
+.streak-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #ff6b6b;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.battle-stats {
+  color: #666;
+  font-weight: 500;
+}
+
+.win-rate {
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+}
+
+.win-rate.high {
+  background: #d4edda;
+  color: #155724;
+}
+
+.win-rate.medium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.win-rate.low {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Empty State */
+.empty-leaderboard {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.empty-leaderboard p {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.empty-leaderboard button {
+  padding: 0.75rem 2rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Your Position */
+.your-position {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 1.5rem;
+}
+
+.your-position h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.position-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.position-rank {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #667eea;
+  min-width: 80px;
+  text-align: center;
+}
+
+.position-details {
+  flex: 1;
+}
+
+.position-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.position-stats {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .podium-section {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .podium-card {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .podium-card.first {
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .leaderboard {
+    padding: 1rem;
+  }
+
+  .leaderboard-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .leaderboard-filters {
+    flex-direction: column;
+  }
+
+  .leaderboard-filters .filter-group {
+    width: 100%;
+  }
+
+  .leaderboard-table {
+    font-size: 0.85rem;
+  }
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  /* Hide some columns on mobile */
+  .leaderboard-table th:nth-child(3),
+  .leaderboard-table td:nth-child(3),
+  .leaderboard-table th:nth-child(4),
+  .leaderboard-table td:nth-child(4),
+  .leaderboard-table th:nth-child(9),
+  .leaderboard-table td:nth-child(9) {
+    display: none;
+  }
+}

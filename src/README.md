@@ -272,7 +272,7 @@ This project is for educational purposes.
 
 - Your Name - Initial work
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Supabase for backend infrastructure
 - React team for the framework

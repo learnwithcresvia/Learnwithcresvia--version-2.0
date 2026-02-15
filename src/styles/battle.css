@@ -1,0 +1,545 @@
+/* ==========================================
+   BATTLE ARENA & SESSION STYLES
+   ========================================== */
+
+.battle-arena {
+  min-height: 100vh;
+  background: #f8f9fa;
+  padding: 2rem;
+}
+
+.battle-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.battle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.battle-header h1 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.battle-header p {
+  color: #666;
+  margin: 0;
+}
+
+/* Battle Stats Section */
+.battle-stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Create Battle Section */
+.create-battle-section {
+  margin-bottom: 3rem;
+}
+
+.create-battle-section h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.battle-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.battle-mode-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 3px solid transparent;
+}
+
+.battle-mode-card:not(.disabled):hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  border-color: #667eea;
+}
+
+.battle-mode-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mode-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.battle-mode-card h3 {
+  font-size: 1.3rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.battle-mode-card p {
+  color: #666;
+  margin: 0 0 1.5rem 0;
+}
+
+.btn-mode {
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-mode:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.btn-mode:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Recent Battles */
+.recent-battles-section h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.battles-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.battle-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: all 0.3s;
+}
+
+.battle-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.battle-card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.battle-language {
+  font-weight: 600;
+  color: #333;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.battle-status {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.battle-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin: 1.5rem 0;
+}
+
+.score-player {
+  text-align: center;
+}
+
+.player-name {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.player-score {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.score-vs {
+  font-weight: 700;
+  color: #999;
+}
+
+.battle-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.battle-date {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.btn-resume-battle {
+  padding: 0.5rem 1.25rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-resume-battle:hover {
+  background: #764ba2;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.config-group {
+  margin-bottom: 1.5rem;
+}
+
+.config-group label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.config-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 0.75rem;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-create {
+  flex: 1;
+  padding: 0.75rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ==========================================
+   BATTLE SESSION
+   ========================================== */
+
+.battle-session {
+  min-height: 100vh;
+  background: #1a1a1a;
+  color: white;
+}
+
+.battle-session-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1.5rem 2rem;
+}
+
+.battle-scores {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.score-box {
+  text-align: center;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.score-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+}
+
+.score-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.battle-info {
+  text-align: center;
+}
+
+.round-info {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.timer {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.timer.warning {
+  color: #ff6b6b;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.battle-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.battle-question-panel {
+  background: #2a2a2a;
+  padding: 2rem;
+  border-radius: 12px;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+.battle-question-panel h2 {
+  color: white;
+  margin: 0 0 1rem 0;
+}
+
+.question-meta {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.battle-editor-panel {
+  background: #2a2a2a;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.editor-actions {
+  padding: 1rem;
+  background: #1a1a1a;
+  text-align: center;
+}
+
+.btn-submit-battle {
+  padding: 1rem 3rem;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-submit-battle:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.btn-submit-battle:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+/* Battle Results Modal */
+.battle-results-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.battle-results-content {
+  background: white;
+  color: #333;
+  border-radius: 12px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 600px;
+}
+
+.results-header.correct {
+  color: #28a745;
+}
+
+.results-header.incorrect {
+  color: #dc3545;
+}
+
+.results-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+}
+
+.speed-bonus {
+  color: #FFA500;
+  font-weight: 600;
+}
+
+.results-body {
+  margin: 2rem 0;
+}
+
+.test-results h3 {
+  margin: 0 0 1rem 0;
+}
+
+.test {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+}
+
+.test.passed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.test.failed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.btn-next-round {
+  width: 100%;
+  padding: 1rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .battle-content {
+    grid-template-columns: 1fr;
+  }
+}
