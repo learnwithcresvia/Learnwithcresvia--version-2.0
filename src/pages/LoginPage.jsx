@@ -42,24 +42,23 @@ export default function LoginPage() {
       return;
     }
 
-    // Fetch profile to get role → route to correct dashboard
+    // Fetch profile by email to get role
     try {
-      const userId = data?.user?.id || data?.session?.user?.id;
-      if (userId) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, profile_completed')
-          .eq('id', userId)
-          .maybeSingle();
-        
-        const role      = profile?.role || 'STUDENT';
-        const completed = profile?.profile_completed || false;
-        navigate(getDashboardRoute(role, completed), { replace: true });
-        return;
-      }
-    } catch {}
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, profile_completed')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle();
 
-    // Fallback
+      const role      = profile?.role || 'STUDENT';
+      const completed = profile?.profile_completed ?? false;
+      console.log('Login role:', role, 'completed:', completed);
+      navigate(getDashboardRoute(role, completed), { replace: true });
+      return;
+    } catch (e) {
+      console.error('Profile fetch error:', e);
+    }
+
     navigate('/dashboard', { replace: true });
   }
 
