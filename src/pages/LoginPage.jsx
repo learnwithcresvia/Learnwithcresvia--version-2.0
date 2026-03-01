@@ -11,6 +11,7 @@ function getDashboardRoute(role, profileCompleted) {
   if (!profileCompleted && role === 'STUDENT') return '/complete-profile';
   switch (role) {
     case 'ADMIN':       return '/admin';
+    case 'DIRECTOR':    return '/director-dashboard';
     case 'HOD':         return '/hod-dashboard';
     case 'COORDINATOR': return '/coordinator-dashboard';
     case 'STAFF':       return '/staff-dashboard';

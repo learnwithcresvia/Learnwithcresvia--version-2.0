@@ -108,6 +108,7 @@ export default function AdminDashboard() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <span style={{ color: 'white', fontWeight: 500 }}>{profile?.name || profile?.email}</span>
+          <a href="/ai-question-generator" style={{ padding:'0.5rem 1rem', background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', color:'white', borderRadius:8, fontWeight:700, fontSize:'0.85rem', textDecoration:'none' }}>🤖 AI Generate</a>
           <span style={{ background: 'rgba(255,255,255,0.2)', color: 'white', padding: '2px 10px', borderRadius: 20, fontSize: '0.8rem', fontWeight: 700 }}>ADMIN</span>
           <button onClick={handleSignOut} style={{ padding: '0.5rem 1.25rem', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.4)', color: 'white', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
             Sign Out
