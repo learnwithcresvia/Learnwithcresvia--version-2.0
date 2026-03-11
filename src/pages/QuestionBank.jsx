@@ -10,14 +10,14 @@ import { supabase } from '../utils/supabaseClient';
 import Editor from '@monaco-editor/react';
 
 // ── Constants ───────────────────────────────────────────────────────────────
-const PISTON_URL = 'https://emkc.org/api/v2/piston/execute';
+const JUDGE0_URL = 'https://ce.judge0.com/submissions?base64_encoded=false&wait=true';
 
 const LANG_MAP = {
-  python:     { pistonLang: 'python',     pistonVer: '3.10.0',  monacoLang: 'python'     },
-  java:       { pistonLang: 'java',       pistonVer: '15.0.2',  monacoLang: 'java'       },
-  c:          { pistonLang: 'c',          pistonVer: '10.2.0',  monacoLang: 'c'          },
-  cpp:        { pistonLang: 'c++',        pistonVer: '10.2.0',  monacoLang: 'cpp'        },
-  javascript: { pistonLang: 'javascript', pistonVer: '18.15.0', monacoLang: 'javascript' },
+  python:     { judgeId: 71, monacoLang: 'python'     },
+  java:       { judgeId: 62, monacoLang: 'java'       },
+  c:          { judgeId: 50, monacoLang: 'c'          },
+  cpp:        { judgeId: 54, monacoLang: 'cpp'        },
+  javascript: { judgeId: 63, monacoLang: 'javascript' },
 };
 
 const LANG_META = {
@@ -34,14 +34,25 @@ const DIFF = {
 };
 
 async function runCode(code, lang, stdin = '') {
+  console.log('API KEY:', import.meta.env.VITE_JUDGE0_KEY); // ← add in VS Code
+  console.log('STDIN:', stdin);  
   const l   = LANG_MAP[lang?.toLowerCase()] || LANG_MAP.python;
-  const res = await fetch(PISTON_URL, {
+  const res = await fetch(JUDGE0_URL, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ language: l.pistonLang, version: l.pistonVer, files: [{ content: code }], stdin }),
+    headers: {
+      'Content-Type':    'application/json',
+    },
+    body: JSON.stringify({
+      source_code: code,
+      language_id: l.judgeId,
+      stdin:       (stdin || '') + '\n',
+    }),
   });
   const d = await res.json();
-  return { stdout: d.run?.stdout || '', stderr: d.run?.stderr || '' };
+  return {
+    stdout: d.stdout || '',
+    stderr: d.stderr || d.compile_output || '',
+  };
 }
 
 const norm = s => String(s || '').trim().replace(/\r\n/g, '\n');
@@ -660,5 +671,4 @@ function EmptyQ({ icon, msg }) {
     </div>
   );
 }
-
 
