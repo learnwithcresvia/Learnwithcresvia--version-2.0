@@ -38,6 +38,9 @@ export default function SubjectPage() {
   const [subject,    setSubject]    = useState(null);
   const [units,      setUnits]      = useState([]);
   const [materials,  setMaterials]  = useState({});
+  const [lessons,    setLessons]    = useState({});
+  const [lessonProg, setLessonProg] = useState({});
+  const [unitView,   setUnitView]   = useState('lessons'); // 'lessons' | 'materials'
   const [progress,   setProgress]   = useState({});
   const [activeUnit, setActiveUnit] = useState(null);
   const [loading,    setLoading]    = useState(true);
@@ -52,7 +55,10 @@ export default function SubjectPage() {
   const [flashcards,  setFlashcards]  = useState([]);
   const [fcIndex,     setFcIndex]     = useState(0);
   const [fcFlipped,   setFcFlipped]   = useState(false);
-  const [savedCards,  setSavedCards]  = useState([]);
+  const [savedCards,       setSavedCards]       = useState([]);
+  const [summaryFromCache, setSummaryFromCache] = useState(false);
+  const [summaryCachedAt,  setSummaryCachedAt]  = useState(null);
+  const [fcFromCache,      setFcFromCache]      = useState(false);
   const quizEndRef = useRef(null);
 
   // Contribute modal
@@ -76,7 +82,7 @@ export default function SubjectPage() {
     setUnits(unitList || []);
     if (unitList?.length) setActiveUnit(unitList[0].id);
 
-    // Approved materials only
+    // Approved materials
     const { data: mats } = await supabase
       .from('study_materials')
       .select('*')
@@ -85,6 +91,26 @@ export default function SubjectPage() {
     const byUnit = {};
     for (const m of mats || []) (byUnit[m.unit_id] = byUnit[m.unit_id] || []).push(m);
     setMaterials(byUnit);
+
+    // Lessons
+    const { data: lessonList } = await supabase
+      .from('lessons')
+      .select('*, lesson_exercises(id, difficulty, xp_reward)')
+      .eq('subject_id', subjectId)
+      .eq('is_published', true)
+      .order('order_num');
+    const byUnitL = {};
+    for (const l of lessonList || []) (byUnitL[l.unit_id] = byUnitL[l.unit_id] || []).push(l);
+    setLessons(byUnitL);
+
+    // Lesson progress
+    const { data: lp } = await supabase
+      .from('lesson_progress')
+      .select('lesson_id, theory_done, example_done, exercise_done, exercise_passed')
+      .eq('user_id', user.id);
+    const lpMap = {};
+    for (const p of lp || []) lpMap[p.lesson_id] = p;
+    setLessonProg(lpMap);
 
     // Progress
     const { data: prog } = await supabase
@@ -122,13 +148,41 @@ export default function SubjectPage() {
     return `Subject: ${subject?.name}\nUnit: ${unit?.title} (${unit?.description || ''})\nMaterials: ${titles}\n${text ? 'Content:\n' + text : ''}`;
   }
 
-  // ── AI Summary ───────────────────────────────────────────────────────────────
-  async function handleSummary() {
-    if (summary) { setAiMode('summary'); return; }
+  // ── AI Summary — with Supabase cache ────────────────────────────────────────
+  async function handleSummary(forceRefresh = false) {
+    if (summary && !forceRefresh) { setAiMode('summary'); return; }
     setAiMode('summary'); setAiLoading(true);
     try {
-      const reply = await callGemini(`Give a clear exam-focused summary of this unit in 200-300 words with bold headings.\n\n${getUnitContext(activeUnit)}`);
+      // 1. Check cache first (unless forced refresh)
+      if (!forceRefresh) {
+        const { data: cached } = await supabase
+          .from('ai_cache')
+          .select('content, updated_at')
+          .eq('unit_id', activeUnit)
+          .eq('type', 'summary')
+          .maybeSingle();
+        if (cached) {
+          setSummary(cached.content);
+          setSummaryFromCache(true);
+          setSummaryCachedAt(cached.updated_at);
+          setAiLoading(false);
+          return;
+        }
+      }
+
+      // 2. Cache miss — call Gemini
+      setSummaryFromCache(false);
+      const reply = await callGemini(
+        `Give a clear exam-focused summary of this unit in 200-300 words with bold headings.\n\n${getUnitContext(activeUnit)}`
+      );
       setSummary(reply);
+      setSummaryCachedAt(new Date().toISOString());
+
+      // 3. Save to cache (upsert so re-generates update the row)
+      await supabase.from('ai_cache').upsert(
+        { unit_id: activeUnit, type: 'summary', content: reply, updated_at: new Date().toISOString() },
+        { onConflict: 'unit_id,type' }
+      );
     } catch (e) { setSummary('⚠️ ' + e.message); }
     finally { setAiLoading(false); }
   }
@@ -159,19 +213,41 @@ export default function SubjectPage() {
   }
 
   // ── Flashcards ───────────────────────────────────────────────────────────────
-  async function generateFlashcards() {
+  // Flashcards - with Supabase cache
+  async function generateFlashcards(forceRefresh = false) {
     setAiMode('flashcards');
-    if (flashcards.length) return;
+    if (flashcards.length && !forceRefresh) return;
     setAiLoading(true);
     try {
+      // 1. Check cache first
+      if (!forceRefresh) {
+        const { data: cached } = await supabase
+          .from('ai_cache')
+          .select('content, updated_at')
+          .eq('unit_id', activeUnit)
+          .eq('type', 'flashcards')
+          .maybeSingle();
+        if (cached) {
+          const parsed = JSON.parse(cached.content);
+          setFlashcards(parsed);
+          setFcIndex(0); setFcFlipped(false);
+          setAiLoading(false);
+          return;
+        }
+      }
+      // 2. Cache miss - call Gemini
       const raw    = await callGemini(`Create 8 flashcards. Reply ONLY as JSON array, no markdown:\n[{"question":"...","answer":"..."}]\n\n${getUnitContext(activeUnit)}`, 600, 0.5);
-      const clean  = raw.replace(/```json\n?/g, '').replace(/```/g, '').trim();
+      const clean  = raw.replace(/\`\`\`json\n?/g, '').replace(/\`\`\`/g, '').trim();
       const parsed = JSON.parse(clean.match(/\[[\s\S]*\]/)?.[0] || clean);
       setFlashcards(parsed); setFcIndex(0); setFcFlipped(false);
+      // 3. Save to cache
+      await supabase.from('ai_cache').upsert(
+        { unit_id: activeUnit, type: 'flashcards', content: JSON.stringify(parsed), updated_at: new Date().toISOString() },
+        { onConflict: 'unit_id,type' }
+      );
     } catch (e) { setFlashcards([{ question: 'Error generating flashcards.', answer: e.message }]); }
     finally { setAiLoading(false); }
   }
-
   async function saveFlashcard(card) {
     const { data } = await supabase.from('flashcards').insert({ user_id: user.id, subject_id: subjectId, unit_id: activeUnit, question: card.question, answer: card.answer }).select().single();
     if (data) setSavedCards(p => [...p, data]);
@@ -245,7 +321,7 @@ export default function SubjectPage() {
         <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem' }}>
           {units.map(unit => (
             <div key={unit.id}
-              onClick={() => { setActiveUnit(unit.id); setAiMode(null); setSummary(''); setQuizMsgs([]); setQuizHistory([]); setFlashcards([]); }}
+              onClick={() => { setActiveUnit(unit.id); setAiMode(null); setSummary(''); setQuizMsgs([]); setQuizHistory([]); setFlashcards([]); setUnitView((lessons[unit.id]||[]).length > 0 ? 'lessons' : 'materials'); }}
               style={{ padding: '0.75rem', borderRadius: 10, marginBottom: '0.25rem', cursor: 'pointer', background: activeUnit === unit.id ? 'rgba(102,126,234,0.12)' : 'transparent', border: `1px solid ${activeUnit === unit.id ? 'rgba(102,126,234,0.25)' : 'transparent'}`, transition: 'all 0.15s' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <div onClick={e => { e.stopPropagation(); toggleProgress(unit.id); }}
@@ -257,8 +333,9 @@ export default function SubjectPage() {
                   <div style={{ fontSize: '0.82rem', color: activeUnit === unit.id ? textPri : textSec, fontWeight: activeUnit === unit.id ? 600 : 400, lineHeight: 1.3 }}>{unit.title}</div>
                 </div>
               </div>
-              <div style={{ marginTop: '0.35rem', paddingLeft: '1.5rem', fontSize: '0.68rem', color: textMut }}>
-                {(materials[unit.id] || []).length} resource{(materials[unit.id] || []).length !== 1 ? 's' : ''}
+              <div style={{ marginTop: '0.35rem', paddingLeft: '1.5rem', fontSize: '0.68rem', color: textMut, display: 'flex', gap: '0.5rem' }}>
+                {(lessons[unit.id] || []).length > 0 && <span style={{ color: '#667eea' }}>💻 {(lessons[unit.id] || []).length} lesson{(lessons[unit.id] || []).length !== 1 ? 's' : ''}</span>}
+                {(materials[unit.id] || []).length > 0 && <span>{(materials[unit.id] || []).length} resource{(materials[unit.id] || []).length !== 1 ? 's' : ''}</span>}
               </div>
             </div>
           ))}
@@ -302,18 +379,94 @@ export default function SubjectPage() {
 
         <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
 
-          {/* Materials */}
+          {/* Main content: lessons + materials */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem' }}>
-            {activeMats.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '4rem', background: surface, borderRadius: 16, border: `1px solid ${border}` }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📭</div>
-                <p style={{ color: textSec }}>No materials uploaded for this unit yet.</p>
-                {!isStaff && <p style={{ color: textMut, fontSize: '0.82rem' }}>Know a good resource? Click <strong style={{ color: '#ed8936' }}>Contribute</strong> to submit it for review.</p>}
+
+            {/* View toggle if both exist */}
+            {(lessons[activeUnit]||[]).length > 0 && (
+              <div style={{ display: 'flex', gap: '0.25rem', background: surface, padding: '0.3rem', borderRadius: 9, width: 'fit-content', marginBottom: '1.25rem', border: `1px solid ${border}` }}>
+                {[{k:'lessons',l:'💻 Lessons'},{k:'materials',l:'📎 Resources'}].map(v => (
+                  <button key={v.k} onClick={() => setUnitView(v.k)}
+                    style={{ padding: '0.35rem 0.875rem', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 600, fontSize: '0.78rem', background: unitView === v.k ? '#667eea' : 'transparent', color: unitView === v.k ? 'white' : textMut, transition: 'all 0.15s' }}>
+                    {v.l}
+                  </button>
+                ))}
               </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {activeMats.map(mat => <MaterialCard key={mat.id} mat={mat} isDark={isDark} surface={surface} border={border} textPri={textPri} textSec={textSec} textMut={textMut} />)}
+            )}
+
+            {/* ── LESSONS VIEW ── */}
+            {unitView === 'lessons' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                {(lessons[activeUnit] || []).length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '4rem', background: surface, borderRadius: 16, border: `1px solid ${border}` }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📚</div>
+                    <p style={{ color: textSec }}>No lessons for this unit yet.</p>
+                  </div>
+                ) : (lessons[activeUnit] || []).map((lesson, idx) => {
+                  const lp      = lessonProg[lesson.id] || {};
+                  const hasEx   = lesson.lesson_exercises?.length > 0;
+                  const ex      = lesson.lesson_exercises?.[0];
+                  const theoryD = lp.theory_done;
+                  const exampD  = lp.example_done;
+                  const exerD   = lp.exercise_passed;
+                  const steps   = [theoryD, lesson.example_code ? exampD : true, hasEx ? exerD : true];
+                  const done    = steps.every(Boolean);
+                  const pct     = Math.round((steps.filter(Boolean).length / steps.length) * 100);
+                  const diffColor = { EASY:'#48bb78', MEDIUM:'#ed8936', HARD:'#f56565' }[ex?.difficulty] || '#667eea';
+                  return (
+                    <div key={lesson.id}
+                      onClick={() => navigate(`/study-hub/subject/${subjectId}/lesson/${lesson.id}`)}
+                      style={{ background: surface, borderRadius: 14, border: `1px solid ${done ? 'rgba(72,187,120,0.25)' : border}`, padding: '1.1rem 1.25rem', cursor: 'pointer', transition: 'all 0.18s', display: 'flex', alignItems: 'center', gap: '1rem' }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = '#667eea'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = done ? 'rgba(72,187,120,0.25)' : border}>
+
+                      {/* Number / check */}
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: done ? 'rgba(72,187,120,0.12)' : 'rgba(102,126,234,0.1)', border: `2px solid ${done ? '#48bb78' : '#667eea'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: done ? '#48bb78' : '#667eea', fontWeight: 800, fontSize: '0.9rem' }}>
+                        {done ? '✓' : idx + 1}
+                      </div>
+
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, color: textPri, fontSize: '0.925rem', marginBottom: '0.3rem' }}>{lesson.title}</div>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '0.72rem', color: theoryD ? '#48bb78' : textMut }}>📖 {theoryD ? 'Read' : 'Theory'}</span>
+                          {lesson.example_code && <span style={{ fontSize: '0.72rem', color: exampD ? '#48bb78' : textMut }}>💡 {exampD ? 'Tried' : 'Example'}</span>}
+                          {hasEx && <span style={{ fontSize: '0.72rem', color: exerD ? '#48bb78' : textMut }}>✏️ {exerD ? 'Solved' : 'Exercise'}</span>}
+                          {hasEx && ex?.difficulty && <span style={{ background: `${diffColor}15`, color: diffColor, padding: '1px 7px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700 }}>{ex.difficulty}</span>}
+                          {hasEx && ex?.xp_reward && <span style={{ background: 'rgba(217,119,6,0.1)', color: '#d97706', padding: '1px 7px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700 }}>+{ex.xp_reward} XP</span>}
+                        </div>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div style={{ width: 80, flexShrink: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: textMut, marginBottom: '0.25rem' }}>
+                          <span>Progress</span><span>{pct}%</span>
+                        </div>
+                        <div style={{ height: 5, background: border, borderRadius: 3 }}>
+                          <div style={{ height: '100%', borderRadius: 3, width: pct + '%', background: done ? '#48bb78' : 'linear-gradient(90deg,#667eea,#764ba2)', transition: 'width 0.4s' }} />
+                        </div>
+                      </div>
+
+                      <div style={{ color: '#667eea', fontSize: '1.1rem', flexShrink: 0 }}>→</div>
+                    </div>
+                  );
+                })}
               </div>
+            )}
+
+            {/* ── MATERIALS VIEW ── */}
+            {unitView === 'materials' && (
+              activeMats.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '4rem', background: surface, borderRadius: 16, border: `1px solid ${border}` }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📭</div>
+                  <p style={{ color: textSec }}>No materials uploaded for this unit yet.</p>
+                  {!isStaff && <p style={{ color: textMut, fontSize: '0.82rem' }}>Know a good resource? Click <strong style={{ color: '#ed8936' }}>Contribute</strong> to submit it for review.</p>}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {activeMats.map(mat => <MaterialCard key={mat.id} mat={mat} isDark={isDark} surface={surface} border={border} textPri={textPri} textSec={textSec} textMut={textMut} />)}
+                </div>
+              )
             )}
           </div>
 
@@ -326,11 +479,21 @@ export default function SubjectPage() {
                 <>
                   <PanelHeader title="🧠 AI Summary" onClose={() => setAiMode(null)} surface={surface} border={border} textPri={textPri} />
                   <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
-                    {aiLoading ? <div style={{ textAlign: 'center', padding: '2rem', color: textSec }}>🧠 Generating...</div>
-                      : <div style={{ color: textSec, fontSize: '0.875rem', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{summary}</div>}
+                    {aiLoading
+                    ? <div style={{ textAlign: 'center', padding: '2rem', color: textSec }}>🧠 Generating...</div>
+                    : <>
+                        {summaryFromCache && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', padding: '0.5rem 0.75rem', background: 'rgba(72,187,120,0.08)', border: '1px solid rgba(72,187,120,0.15)', borderRadius: 8 }}>
+                            <span style={{ fontSize: '0.7rem' }}>⚡</span>
+                            <span style={{ fontSize: '0.72rem', color: '#48bb78', fontWeight: 600 }}>Loaded from cache — instant!</span>
+                          </div>
+                        )}
+                        <div style={{ color: textSec, fontSize: '0.875rem', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{summary}</div>
+                      </>
+                  }
                   </div>
                   <div style={{ padding: '0.75rem', borderTop: `1px solid ${border}` }}>
-                    <button onClick={() => { setSummary(''); handleSummary(); }} style={btnStyle('#667eea')}>↺ Regenerate</button>
+                    <button onClick={() => handleSummary(true)} style={btnStyle('#667eea')}>↺ Regenerate</button>
                   </div>
                 </>
               )}
@@ -370,7 +533,10 @@ export default function SubjectPage() {
                     {aiLoading ? <div style={{ color: textSec }}>🃏 Generating...</div>
                       : flashcards.length > 0 && (
                         <>
-                          <div style={{ fontSize: '0.75rem', color: textMut }}>{fcIndex + 1} / {flashcards.length}</div>
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <div style={{ fontSize: '0.75rem', color: textMut }}>{fcIndex + 1} / {flashcards.length}</div>
+                            {fcFromCache && <span style={{ fontSize: '0.68rem', color: '#48bb78', background: 'rgba(72,187,120,0.1)', padding: '1px 6px', borderRadius: 6, border: '1px solid rgba(72,187,120,0.2)' }}>⚡ cached</span>}
+                          </div>
                           <div onClick={() => setFcFlipped(f => !f)}
                             style={{ width: '100%', minHeight: 170, background: fcFlipped ? 'rgba(102,126,234,0.12)' : (isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc'), border: `1px solid ${fcFlipped ? 'rgba(102,126,234,0.3)' : border}`, borderRadius: 16, padding: '1.5rem', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', transition: 'all 0.3s' }}>
                             <div style={{ fontSize: '0.7rem', color: textMut, marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{fcFlipped ? 'Answer' : 'Question — tap to flip'}</div>
@@ -389,7 +555,7 @@ export default function SubjectPage() {
                       )}
                   </div>
                   <div style={{ padding: '0.75rem', borderTop: `1px solid ${border}` }}>
-                    <button onClick={() => { setFlashcards([]); generateFlashcards(); }} style={btnStyle('#667eea')}>↺ New Set</button>
+                    <button onClick={() => generateFlashcards(true)} style={btnStyle('#667eea')}>↺ Refresh Set</button>
                   </div>
                 </>
               )}

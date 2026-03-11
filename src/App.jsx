@@ -4,7 +4,7 @@ import AuthProvider from './contexts/AuthContext';
 import { ThemeProvider } from './hooks/useTheme';
 import { useAuth } from './hooks/useAuth';
 import AppLayout from './components/AppLayout';
-
+import QuestionBank from './pages/QuestionBank';
 // ── Core pages ────────────────────────────────────────────────────────────────
 import HomePage              from './pages/HomePage';
 import LoginPage             from './pages/LoginPage';
@@ -32,6 +32,7 @@ import HODDashboard          from './pages/HODDashboard';
 import StudyHub              from './pages/StudyHub';
 import SubjectPage           from './pages/SubjectPage';
 import StaffStudyHub         from './pages/StaffStudyHub';
+import LessonPlayer           from './pages/LessonPlayer';
 
 // ── Spinner ───────────────────────────────────────────────────────────────────
 function Spinner() {
@@ -112,7 +113,8 @@ function AppRoutes() {
       <Route path="/dashboard"                     element={<Protected><StudentDashboard /></Protected>} />
       <Route path="/practice-hub"                  element={<Protected><PracticeHub /></Protected>} />
       <Route path="/practice/:sessionId"           element={<Protected><PracticeSession /></Protected>} />
-      <Route path="/practice/question/:questionId" element={<Protected><QuestionCodingScreen /></Protected>} />
+      <Route path="/question-bank"                 element={<WithLayout><QuestionBank /></WithLayout>} />
+      <Route path="/question-bank"                 element={<Protected><QuestionBank /></Protected>} />     
       <Route path="/battle-arena"                  element={<Protected><BattleArena /></Protected>} />
       <Route path="/battle/:battleId"              element={<Protected><BattleSession /></Protected>} />
       <Route path="/leaderboard"                   element={<Protected><Leaderboard /></Protected>} />
@@ -124,6 +126,7 @@ function AppRoutes() {
       <Route path="/study-hub/subject/:subjectId"  element={<Protected><SubjectPage /></Protected>} />
       {/* Staff + HOD + Admin: manage + review pending contributions */}
       <Route path="/study-hub/manage"              element={<StaffOnly><StaffStudyHub /></StaffOnly>} />
+      <Route path="/study-hub/subject/:subjectId/lesson/:lessonId" element={<Protected><LessonPlayer /></Protected>} />
 
       {/* ── Staff ── */}
       <Route path="/staff-dashboard"               element={<Protected><StaffDashboard /></Protected>} />

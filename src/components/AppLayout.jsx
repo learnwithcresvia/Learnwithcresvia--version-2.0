@@ -18,7 +18,8 @@ function getNavItems(role) {
     { icon: '⚔️', label: 'Battle',       to: '/battle-arena' },
     { icon: '🏆', label: 'Leaderboard',  to: '/leaderboard' },
     { icon: '📢', label: 'Notices',      to: '/announcements' },
-  ];
+    { icon: '🎯', label: 'Practice', to: '/question-bank' },
+    ];
   const staff = [
     { icon: '📊', label: 'Dashboard',    to: role === 'HOD' ? '/hod-dashboard' : '/staff-dashboard' },
     { icon: '📚', label: 'Study Hub',    to: '/study-hub/manage' },

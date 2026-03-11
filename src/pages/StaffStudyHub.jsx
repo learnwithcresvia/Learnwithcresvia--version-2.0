@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { supabase } from '../utils/supabaseClient';
+import StaffLessonEditor from '../components/StaffLessonEditor';
 
 const DEPARTMENTS = ['CSE','IT','ECE','EEE','MECH','CIVIL','AIDS','AIML'];
 const SEMESTERS   = [1,2,3,4,5,6,7,8];
@@ -363,6 +364,19 @@ export default function StaffStudyHub() {
               </div>
             </div>
           </div>
+
+          {/* ── Lessons ── */}
+          {filterUnit && (
+            <div style={{ background: surface, borderRadius: 14, border: `1px solid ${border}`, marginTop: '1.5rem', minHeight: 500 }}>
+              <div style={{ padding: '0.875rem 1rem', borderBottom: `1px solid ${border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: textPri }}>💻 Structured Lessons — {units.find(u=>u.id===filterUnit)?.title || ''}</span>
+                <span style={{ fontSize: '0.72rem', color: textMut }}>Theory → Example → Exercise per lesson</span>
+              </div>
+              <div style={{ padding: '1rem' }}>
+                <StaffLessonEditor unitId={filterUnit} subjectId={filterSubj} unitTitle={units.find(u=>u.id===filterUnit)?.title} />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
